@@ -1,4 +1,5 @@
 import {useEffect, useState} from 'react';
+import {Picker} from '@react-native-picker/picker';
 import {
   StyleSheet,
   Text,
@@ -17,6 +18,7 @@ export type ToDo = {
   id: string;
   descricao: string;
   status: boolean;
+  date: number;
 };
 
 export default function ToDoList(): JSX.Element {
@@ -24,12 +26,15 @@ export default function ToDoList(): JSX.Element {
 
   const [descricao, setDescricao] = useState<string>('');
 
+  const [sorted, setSorted] = useState<'data' | 'alfa'>('alfa');
+
   const handleSetToDo = (descricao: string) => {
+    const date = new Date().getTime();
     const id = uuid.v4().toString();
     const status = false;
     /* const date = new Date().getDate().toString(); */
     if (descricao) {
-      SetData({descricao, status, id})
+      SetData({descricao, status, id, date})
         .then(() => {
           fetchData();
           setDescricao('');
@@ -42,25 +47,58 @@ export default function ToDoList(): JSX.Element {
     }
   };
 
+  const handleRemoveAll = async () => {
+    await RemoveAll();
+    setToDoList([]);
+  };
+
   const fetchData = async () => {
     const result: Array<ToDo> = await GetData();
     const sortedList = [...result].sort((a, b) => {
-      if (a.descricao < b.descricao) {
-        return -1;
-      }
-      if (a.descricao > b.descricao) {
+      if (a.date < b.date) {
         return 1;
+      }
+      if (a.date > b.date) {
+        return -1;
       }
       return 0;
     });
-
     setToDoList(sortedList);
   };
+  const handleSort = () => {
+    console.log(sorted);
+    if (sorted === 'data') {
+      const sortedList = [...toDoList].sort((a, b) => {
+        if (a.date < b.date) {
+          return -1;
+        }
+        if (a.date > b.date) {
+          return 1;
+        }
+        return 0;
+      });
+      setToDoList(sortedList);
+    } else if (sorted === 'alfa') {
+      const sortedList = [...toDoList].sort((a, b) => {
+        if (a.descricao < b.descricao) {
+          return -1;
+        }
+        if (a.descricao > b.descricao) {
+          return 1;
+        }
+        return 0;
+      });
+      setToDoList(sortedList);
+    }
+  };
+  useEffect(() => {
+    handleSort();
+  }, [sorted]);
 
   useEffect(() => {
     fetchData();
     //console.log(toDoList);
-  }, [toDoList]);
+  }, []);
 
   return (
     <View style={styles.container}>
@@ -80,6 +118,16 @@ export default function ToDoList(): JSX.Element {
         </TouchableOpacity>
       </View>
       <ScrollView style={styles.scrollView}>
+        <Picker
+          style={styles.picker}
+          dropdownIconColor="#fff"
+          selectedValue={sorted}
+          onValueChange={(itemValue, itemIndex) =>
+            setSorted(itemValue)
+          }>
+          <Picker.Item label="Alfabética" value="alfa" />
+          <Picker.Item label="Data" value="data" />
+        </Picker>
         {toDoList?.map(item => {
           const colorStatus = item.status ? '#0ead69' : '#ff5e5b';
           return (
@@ -101,8 +149,10 @@ export default function ToDoList(): JSX.Element {
             </View>
           );
         })}
-        {toDoList?.length > 10 && (
-          <TouchableOpacity style={styles.buttonRemoveAll} onPress={RemoveAll}>
+        {toDoList?.length >= 10 && (
+          <TouchableOpacity
+            style={styles.buttonRemoveAll}
+            onPress={() => handleRemoveAll()}>
             <Text style={styles.txtRemoveAll}>Remover Todos</Text>
           </TouchableOpacity>
         )}
@@ -195,5 +245,9 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontWeight: 'bold',
     textAlign: 'center',
+  },
+  picker: {
+    marginHorizontal: 10,
+    color: '#fff',
   },
 });

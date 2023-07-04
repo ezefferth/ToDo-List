@@ -13,8 +13,8 @@ export async function GetData() {
   }
 }
 
-export async function SetData({descricao, status, id}: ToDo) {
-  const newToDo = {descricao, status, id};
+export async function SetData({descricao, status, id, date}: ToDo) {
+  const newToDo = {descricao, status, id, date};
   try {
     let todoList = await GetData();
     if (todoList === null) {
