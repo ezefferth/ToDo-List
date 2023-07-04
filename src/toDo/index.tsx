@@ -47,6 +47,11 @@ export default function ToDoList(): JSX.Element {
     }
   };
 
+  const handleToggleStatus = async (id: string) => {
+    await ToggleStatus(id)
+    fetchData()
+  }
+
   const handleRemoveAll = async () => {
     await RemoveAll();
     setToDoList([]);
@@ -134,7 +139,7 @@ export default function ToDoList(): JSX.Element {
             <View
               style={[styles.descricao, {borderColor: colorStatus}]}
               key={item.id}>
-              <TouchableOpacity onPress={() => ToggleStatus(item.id)}>
+              <TouchableOpacity onPress={() => handleToggleStatus(item.id)}>
                 <Text style={styles.txtToDoItem}>{item.descricao}</Text>
               </TouchableOpacity>
               <TouchableOpacity
