@@ -11,34 +11,50 @@ import uuid from 'react-native-uuid';
 
 import {GetData, RemoveAll, RemoveItem, SetData, ToggleStatus} from '../db';
 import {ScrollView} from 'react-native';
+import {Alert} from 'react-native';
 
-type toDo = {
+export type ToDo = {
   id: string;
   descricao: string;
   status: boolean;
 };
 
 export default function ToDoList(): JSX.Element {
-  const [toDoList, setToDoList] = useState<Array<toDo>>([]);
+  const [toDoList, setToDoList] = useState<Array<ToDo>>([]);
 
   const [descricao, setDescricao] = useState<string>('');
 
   const handleSetToDo = (descricao: string) => {
     const id = uuid.v4().toString();
     const status = false;
-    SetData({descricao, status, id})
-      .then(() => {
-        fetchData();
-        setDescricao('');
-      })
-      .catch(error => {
-        console.log(error);
-      });
+    /* const date = new Date().getDate().toString(); */
+    if (descricao) {
+      SetData({descricao, status, id})
+        .then(() => {
+          fetchData();
+          setDescricao('');
+        })
+        .catch(error => {
+          console.log(error);
+        });
+    } else {
+      Alert.alert('Insira alguma coisa para inserir');
+    }
   };
 
   const fetchData = async () => {
-    const result = await GetData();
-    setToDoList(result);
+    const result: Array<ToDo> = await GetData();
+    const sortedList = [...result].sort((a, b) => {
+      if (a.descricao < b.descricao) {
+        return -1;
+      }
+      if (a.descricao > b.descricao) {
+        return 1;
+      }
+      return 0;
+    });
+
+    setToDoList(sortedList);
   };
 
   useEffect(() => {
@@ -48,7 +64,7 @@ export default function ToDoList(): JSX.Element {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>To-Do List</Text>
+      <Text style={styles.title}>To-Do</Text>
 
       <View style={styles.inputView}>
         <TextInput
@@ -60,30 +76,37 @@ export default function ToDoList(): JSX.Element {
         <TouchableOpacity
           style={styles.button}
           onPress={() => handleSetToDo(descricao)}>
-          <Text style={styles.buttonText}>Cadastrar</Text>
+          <Text style={styles.buttonText}>Inserir</Text>
         </TouchableOpacity>
       </View>
       <ScrollView style={styles.scrollView}>
         {toDoList?.map(item => {
-          const colorStatus = item.status ? '#0ead69' : '#ff5e5b'
+          const colorStatus = item.status ? '#0ead69' : '#ff5e5b';
           return (
-            <View style={[styles.descricao, {borderColor: colorStatus}]} key={item.id}>
+            <View
+              style={[styles.descricao, {borderColor: colorStatus}]}
+              key={item.id}>
               <TouchableOpacity onPress={() => ToggleStatus(item.id)}>
                 <Text style={styles.txtToDoItem}>{item.descricao}</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.btnToDoItem} onPress={() => RemoveItem(item.id)}>
-                <Text style={{fontWeight: 'bold', color: '#fff'}}>Excluir</Text>
+              <TouchableOpacity
+                style={[
+                  styles.btnToDoItem,
+                  item.status ? {opacity: 1} : {opacity: 0.5},
+                ]}
+                disabled={!item.status}
+                onPress={() => RemoveItem(item.id)}>
+                <Text style={{fontWeight: 'bold', color: '#fff'}}>X</Text>
               </TouchableOpacity>
             </View>
           );
         })}
+        {toDoList?.length > 10 && (
+          <TouchableOpacity style={styles.buttonRemoveAll} onPress={RemoveAll}>
+            <Text style={styles.txtRemoveAll}>Remover Todos</Text>
+          </TouchableOpacity>
+        )}
       </ScrollView>
-
-      <View style={styles.viewRemoveAll}>
-        <TouchableOpacity style={styles.buttonRemoveAll} onPress={RemoveAll}>
-          <Text style={styles.txtRemoveAll}>Remover Todos</Text>
-        </TouchableOpacity>
-      </View>
     </View>
   );
 }
@@ -112,6 +135,7 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: 10,
     paddingHorizontal: 15,
     backgroundColor: '#fff',
+    color: '#333',
   },
   button: {
     backgroundColor: '#284B63',
@@ -131,7 +155,7 @@ const styles = StyleSheet.create({
   },
   descricao: {
     marginHorizontal: 20,
-    borderLeftWidth: 5,
+    borderLeftWidth: 6,
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginBottom: 10,
@@ -164,7 +188,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 5,
     alignSelf: 'center',
-    marginTop: 20,
+    //marginTop: 20,
     width: 150,
   },
   txtRemoveAll: {

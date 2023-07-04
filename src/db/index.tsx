@@ -1,11 +1,8 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {Alert} from 'react-native';
+import { ToDo } from '../toDo';
 
-type toDo = {
-  id: string;
-  descricao: string;
-  status: boolean;
-};
+
 
 export async function GetData() {
   try {
@@ -16,7 +13,7 @@ export async function GetData() {
   }
 }
 
-export async function SetData({descricao, status, id}: toDo) {
+export async function SetData({descricao, status, id}: ToDo) {
   const newToDo = {descricao, status, id};
   try {
     let todoList = await GetData();
@@ -43,7 +40,7 @@ export async function RemoveAll() {
 export async function RemoveItem(id: string) {
   try {
     const todoList = await GetData();
-    const updatedToDoList = todoList.filter((item: toDo) => item.id !== id);
+    const updatedToDoList = todoList.filter((item: ToDo) => item.id !== id);
     await AsyncStorage.setItem('toDo-list', JSON.stringify(updatedToDoList));
   } catch (e) {
     Alert.alert('Erro ao excluir a tarefa');
@@ -53,7 +50,7 @@ export async function RemoveItem(id: string) {
 export async function ToggleStatus(id: string) {
   try {
     const todoList = await GetData();
-    const updatedToDoList = todoList.map((item: toDo) => {
+    const updatedToDoList = todoList.map((item: ToDo) => {
       if (item.id === id) {
         return {
           ...item,
