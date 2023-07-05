@@ -28,6 +28,8 @@ export default function ToDoList(): JSX.Element {
 
   const [sorted, setSorted] = useState<'data' | 'alfa'>('alfa');
 
+  const [done, setDone] = useState<number>(0);
+
   const handleSetToDo = (descricao: string) => {
     const date = new Date().getTime();
     const id = uuid.v4().toString();
@@ -48,31 +50,28 @@ export default function ToDoList(): JSX.Element {
   };
 
   const handleToggleStatus = async (id: string) => {
-    await ToggleStatus(id)
-    fetchData()
-  }
+    await ToggleStatus(id);
+    fetchData();
+    handleDone();
+  };
   const handleRemoveItem = async (id: string) => {
     await RemoveItem(id);
-    fetchData()
-  }
+    fetchData();
+  };
 
-  const handleRemoveAll = async () => {
-    await RemoveAll();
-    setToDoList([]);
+  const handleRemoveAllDone = async () => {
+    //await RemoveAll();
+    toDoList.map(item => {
+      if (item.status === true) {
+        handleRemoveItem(item.id);
+      }
+    });
+    fetchData();
   };
 
   const fetchData = async () => {
     const result: Array<ToDo> = await GetData();
-    const sortedList = [...result].sort((a, b) => {
-      if (a.date < b.date) {
-        return 1;
-      }
-      if (a.date > b.date) {
-        return -1;
-      }
-      return 0;
-    });
-    setToDoList(sortedList);
+    setToDoList(result);
   };
   const handleSort = () => {
     console.log(sorted);
@@ -109,6 +108,23 @@ export default function ToDoList(): JSX.Element {
     //console.log(toDoList);
   }, []);
 
+  const handleDone = async () => {
+    let aux = 0;
+    toDoList?.map(item => {
+      if (item.status === true) {
+        aux = aux + 1;
+        setDone(done => done + 1);
+      }
+    });
+    if (aux === 0) {
+      setDone(0);
+    }
+  };
+
+  useEffect(() => {
+    handleDone();
+  }, [toDoList]);
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>To-Do</Text>
@@ -131,9 +147,7 @@ export default function ToDoList(): JSX.Element {
           style={styles.picker}
           dropdownIconColor="#fff"
           selectedValue={sorted}
-          onValueChange={(itemValue, itemIndex) =>
-            setSorted(itemValue)
-          }>
+          onValueChange={(itemValue, itemIndex) => setSorted(itemValue)}>
           <Picker.Item label="Alfabética" value="alfa" />
           <Picker.Item label="Data" value="data" />
         </Picker>
@@ -158,14 +172,16 @@ export default function ToDoList(): JSX.Element {
             </View>
           );
         })}
-        {toDoList?.length >= 10 && (
+      </ScrollView>
+      <View style={styles.viewRemoveAll}>
+        {done > 0 && (
           <TouchableOpacity
             style={styles.buttonRemoveAll}
-            onPress={() => handleRemoveAll()}>
-            <Text style={styles.txtRemoveAll}>Remover Todos</Text>
+            onPress={() => handleRemoveAllDone()}>
+            <Text style={styles.txtRemoveAll}>Remover Feitos</Text>
           </TouchableOpacity>
         )}
-      </ScrollView>
+      </View>
     </View>
   );
 }
@@ -242,6 +258,7 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
   },
   buttonRemoveAll: {
+    //position: 'absolute',
     backgroundColor: '#85182a',
     paddingHorizontal: 20,
     paddingVertical: 10,
