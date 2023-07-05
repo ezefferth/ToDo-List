@@ -6,6 +6,7 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  Keyboard,
 } from 'react-native';
 
 import uuid from 'react-native-uuid';
@@ -145,6 +146,10 @@ export default function ToDoList(): JSX.Element {
           placeholder="Digite aqui"
           onChangeText={e => setDescricao(e)}
           value={descricao}
+          onSubmitEditing={() => {
+            handleSetToDo(descricao);
+            Keyboard.dismiss();
+          }}
         />
         <TouchableOpacity
           style={styles.button}
@@ -152,7 +157,10 @@ export default function ToDoList(): JSX.Element {
           <Text style={styles.buttonText}>Inserir</Text>
         </TouchableOpacity>
       </View>
-      <ScrollView style={styles.scrollView}>
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={{flexGrow: 1}}
+        keyboardShouldPersistTaps="handled">
         <Picker
           style={styles.picker}
           dropdownIconColor="#fff"
@@ -182,16 +190,16 @@ export default function ToDoList(): JSX.Element {
             </View>
           );
         })}
-      </ScrollView>
-      <View style={styles.viewRemoveAll}>
         {done > 0 && (
-          <TouchableOpacity
-            style={styles.buttonRemoveAll}
-            onPress={() => handleRemoveAllDone()}>
-            <Text style={styles.txtRemoveAll}>Remover Feitos</Text>
-          </TouchableOpacity>
+          <View style={styles.viewRemoveAll}>
+            <TouchableOpacity
+              style={styles.buttonRemoveAll}
+              onPress={() => handleRemoveAllDone()}>
+              <Text style={styles.txtRemoveAll}>Remover Feitos</Text>
+            </TouchableOpacity>
+          </View>
         )}
-      </View>
+      </ScrollView>
     </View>
   );
 }
@@ -234,9 +242,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   scrollView: {
-    flex: 1,
     width: '100%',
-    marginBottom: 80, // Altura do botão de exclusão
   },
   descricao: {
     marginHorizontal: 20,
