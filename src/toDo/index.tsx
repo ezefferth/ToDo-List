@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   View,
   Keyboard,
+  TouchableWithoutFeedback,
 } from 'react-native';
 
 import uuid from 'react-native-uuid';
@@ -27,9 +28,11 @@ export default function ToDoList(): JSX.Element {
 
   const [descricao, setDescricao] = useState<string>('');
 
-  const [sorted, setSorted] = useState<'data' | 'alfa'>('alfa');
+  const [sorted, setSorted] = useState<'data' | 'alfa'>('data');
 
   const [done, setDone] = useState<number>(0);
+
+  const [keyboardStatus, setKeyboardStatus] = useState<boolean>(false);
 
   const handleSetToDo = async (descricao: string) => {
     const date = new Date().getTime();
@@ -136,71 +139,79 @@ export default function ToDoList(): JSX.Element {
     handleSort();
   }, [sorted]);
 
-  return (
-    <View style={styles.container}>
-      <Text style={styles.title}>To-Do</Text>
+  useEffect(() => {
+    setKeyboardStatus(Keyboard.isVisible());
+  },[keyboardStatus]);
 
-      <View style={styles.inputView}>
-        <TextInput
-          style={styles.input}
-          placeholder="Digite aqui"
-          onChangeText={e => setDescricao(e)}
-          value={descricao}
-          onSubmitEditing={() => {
-            handleSetToDo(descricao);
-            Keyboard.dismiss();
-          }}
-        />
-        <TouchableOpacity
-          style={styles.button}
-          onPress={() => handleSetToDo(descricao)}>
-          <Text style={styles.buttonText}>Inserir</Text>
-        </TouchableOpacity>
-      </View>
-      <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={{flexGrow: 1}}
-        keyboardShouldPersistTaps="handled">
-        <Picker
-          style={styles.picker}
-          dropdownIconColor="#fff"
-          selectedValue={sorted}
-          onValueChange={(itemValue, itemIndex) => setSorted(itemValue)}>
-          <Picker.Item label="Alfabética" value="alfa" />
-          <Picker.Item label="Data" value="data" />
-        </Picker>
-        {toDoList?.map(item => {
-          const colorStatus = item.status ? '#0ead69' : '#ff5e5b';
-          return (
-            <View
-              style={[styles.descricao, {borderColor: colorStatus}]}
-              key={item.id}>
-              <TouchableOpacity onPress={() => handleToggleStatus(item.id)}>
-                <Text style={styles.txtToDoItem}>{item.descricao}</Text>
-              </TouchableOpacity>
+  return (
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+      {/* <KeyboardAvoidingView style={styles.container}> */}
+      <View style={styles.container}>
+        <Text style={styles.title}>To-Do</Text>
+
+        <View style={styles.inputView}>
+          <TextInput
+            style={styles.input}
+            placeholder="Digite aqui"
+            onChangeText={e => setDescricao(e)}
+            value={descricao}
+            onSubmitEditing={() => {
+              handleSetToDo(descricao);
+              Keyboard.dismiss();
+            }}
+          />
+          <TouchableOpacity
+            style={styles.button}
+            onPress={() => handleSetToDo(descricao)}>
+            <Text style={styles.buttonText}>Inserir</Text>
+          </TouchableOpacity>
+        </View>
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={{flexGrow: 1}}
+          keyboardShouldPersistTaps="handled">
+          <Picker
+            style={styles.picker}
+            dropdownIconColor="#fff"
+            selectedValue={sorted}
+            onValueChange={(itemValue, itemIndex) => setSorted(itemValue)}>
+            <Picker.Item label="Alfabético" value="alfa" />
+            <Picker.Item label="Data" value="data" />
+          </Picker>
+          {toDoList?.map(item => {
+            const colorStatus = item.status ? '#0ead69' : '#ff5e5b';
+            return (
+              <View
+                style={[styles.descricao, {borderColor: colorStatus}]}
+                key={item.id}>
+                <TouchableOpacity onPress={() => handleToggleStatus(item.id)}>
+                  <Text style={styles.txtToDoItem}>{item.descricao}</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[
+                    styles.btnToDoItem,
+                    item.status ? {opacity: 1} : {opacity: 0.5},
+                  ]}
+                  disabled={!item.status}
+                  onPress={() => handleRemoveItem(item.id)}>
+                  <Text style={{fontWeight: 'bold', color: '#fff'}}>X</Text>
+                </TouchableOpacity>
+              </View>
+            );
+          })}
+          {done > 0 && Keyboard.isVisible() === false && (
+            <View style={styles.viewRemoveAll}>
               <TouchableOpacity
-                style={[
-                  styles.btnToDoItem,
-                  item.status ? {opacity: 1} : {opacity: 0.5},
-                ]}
-                disabled={!item.status}
-                onPress={() => handleRemoveItem(item.id)}>
-                <Text style={{fontWeight: 'bold', color: '#fff'}}>X</Text>
+                style={styles.buttonRemoveAll}
+                onPress={() => handleRemoveAllDone()}>
+                <Text style={styles.txtRemoveAll}>Remover Feitos</Text>
               </TouchableOpacity>
             </View>
-          );
-        })}
-        {done > 0 && (
-          <View style={styles.viewRemoveAll}>
-            <TouchableOpacity
-              style={styles.buttonRemoveAll}
-              onPress={() => handleRemoveAllDone()}>
-              <Text style={styles.txtRemoveAll}>Remover Feitos</Text>
-            </TouchableOpacity>
-          </View>
-        )}
-      </ScrollView>
-    </View>
+          )}
+        </ScrollView>
+      </View>
+      {/* </KeyboardAvoidingView> */}
+    </TouchableWithoutFeedback>
   );
 }
 
@@ -242,6 +253,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   scrollView: {
+    flex: 1,
     width: '100%',
   },
   descricao: {
