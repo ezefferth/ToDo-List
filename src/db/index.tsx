@@ -29,11 +29,13 @@ export async function SetData({descricao, status, id, date}: ToDo) {
   }
 }
 
-export async function RemoveAll() {
+export async function RemoveAllDone() {
   try {
-    await AsyncStorage.removeItem('toDo-list');
+    let todoList = await GetData();
+    const updatedToDoList = todoList.filter((item: ToDo) => !item.status);
+    await AsyncStorage.setItem('toDo-list', JSON.stringify(updatedToDoList));
   } catch (e) {
-    Alert.alert('Erro ao remover todos os todos');
+    Alert.alert('Erro ao remover todos os items feitos');
   }
 }
 

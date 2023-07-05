@@ -10,7 +10,7 @@ import {
 
 import uuid from 'react-native-uuid';
 
-import {GetData, RemoveAll, RemoveItem, SetData, ToggleStatus} from '../db';
+import {GetData, RemoveAllDone, RemoveItem, SetData, ToggleStatus} from '../db';
 import {ScrollView} from 'react-native';
 import {Alert} from 'react-native';
 
@@ -30,13 +30,13 @@ export default function ToDoList(): JSX.Element {
 
   const [done, setDone] = useState<number>(0);
 
-  const handleSetToDo = (descricao: string) => {
+  const handleSetToDo = async (descricao: string) => {
     const date = new Date().getTime();
     const id = uuid.v4().toString();
     const status = false;
     /* const date = new Date().getDate().toString(); */
     if (descricao) {
-      SetData({descricao, status, id, date})
+      await SetData({descricao, status, id, date})
         .then(() => {
           fetchData();
           setDescricao('');
@@ -60,48 +60,53 @@ export default function ToDoList(): JSX.Element {
   };
 
   const handleRemoveAllDone = async () => {
-    //await RemoveAll();
-    toDoList.map(item => {
-      if (item.status === true) {
-        handleRemoveItem(item.id);
-      }
-    });
-    fetchData();
+    await RemoveAllDone();
+
+    setTimeout(() => {
+      fetchData();
+    }, 100);
   };
 
   const fetchData = async () => {
     const result: Array<ToDo> = await GetData();
-    setToDoList(result);
-  };
-  const handleSort = () => {
-    console.log(sorted);
     if (sorted === 'data') {
-      const sortedList = [...toDoList].sort((a, b) => {
+      const sortedList = [...result].sort((a, b) => {
         if (a.date < b.date) {
-          return -1;
+          return 1;
         }
         if (a.date > b.date) {
-          return 1;
+          return -1;
         }
         return 0;
       });
       setToDoList(sortedList);
     } else if (sorted === 'alfa') {
+      const sortedList = [...result].sort((a, b) =>
+        a.descricao.toLowerCase().localeCompare(b.descricao.toLowerCase()),
+      );
+      setToDoList(sortedList);
+    }
+  };
+
+  const handleSort = () => {
+    if (sorted === 'data') {
       const sortedList = [...toDoList].sort((a, b) => {
-        if (a.descricao < b.descricao) {
-          return -1;
-        }
-        if (a.descricao > b.descricao) {
+        if (a.date < b.date) {
           return 1;
+        }
+        if (a.date > b.date) {
+          return -1;
         }
         return 0;
       });
       setToDoList(sortedList);
+    } else if (sorted === 'alfa') {
+      const sortedList = [...toDoList].sort((a, b) =>
+        a.descricao.toLowerCase().localeCompare(b.descricao.toLowerCase()),
+      );
+      setToDoList(sortedList);
     }
   };
-  useEffect(() => {
-    handleSort();
-  }, [sorted]);
 
   useEffect(() => {
     fetchData();
@@ -124,6 +129,11 @@ export default function ToDoList(): JSX.Element {
   useEffect(() => {
     handleDone();
   }, [toDoList]);
+
+  useEffect(() => {
+    console.log(sorted);
+    handleSort();
+  }, [sorted]);
 
   return (
     <View style={styles.container}>
