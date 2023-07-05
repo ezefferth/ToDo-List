@@ -51,6 +51,10 @@ export default function ToDoList(): JSX.Element {
     await ToggleStatus(id)
     fetchData()
   }
+  const handleRemoveItem = async (id: string) => {
+    await RemoveItem(id);
+    fetchData()
+  }
 
   const handleRemoveAll = async () => {
     await RemoveAll();
@@ -148,7 +152,7 @@ export default function ToDoList(): JSX.Element {
                   item.status ? {opacity: 1} : {opacity: 0.5},
                 ]}
                 disabled={!item.status}
-                onPress={() => RemoveItem(item.id)}>
+                onPress={() => handleRemoveItem(item.id)}>
                 <Text style={{fontWeight: 'bold', color: '#fff'}}>X</Text>
               </TouchableOpacity>
             </View>
